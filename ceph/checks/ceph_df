@@ -34,7 +34,7 @@ def check_ceph_df(item, params, info):
         avail = jinfo['stats']['total_avail_bytes']
         size = jinfo['stats']['total_bytes']
 
-        return df_check_filesystem_single(g_hostname, item, size/1024**2, avail/1024**2, params)
+        return df_check_filesystem_single(g_hostname, item, size/1024**2, avail/1024**2, None, None, params)
     else:
         pool = (i for i in jinfo['pools'] if i['name'] == item).next()
 
@@ -45,7 +45,7 @@ def check_ceph_df(item, params, info):
         objs = stats['objects']
         size = avail + used
 
-        status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, size/1024**2, avail/1024**2, params)
+        status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, size/1024**2, avail/1024**2, None, None, params)
         perfdata.append(('Objects', objs))
         return status, infotext, perfdata
 
