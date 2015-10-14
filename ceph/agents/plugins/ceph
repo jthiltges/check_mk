@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -x /usr/bin/ceph  ]; then
+    echo '<<<ceph>>>'
+    /usr/bin/ceph -f json status
+
+    echo '<<<ceph_df>>>'
+    /usr/bin/ceph -f json df
+fi

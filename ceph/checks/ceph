@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+
+import json
+
+class RetCode(object):
+    OK, Warning, Critical, Unknown = range(4)
+
+    def __init__(self):
+        self.retcode = self.OK
+
+    # Return code can only increase
+    def inc(self, code):
+        if code > self.retcode:
+            self.retcode = code
+
+    def __int__(self):
+        return self.retcode
+
+def inventory_ceph(info):
+    jinfo = json.loads(' '.join(info[0]))
+    fsid = jinfo['fsid']
+    return [(str(fsid), {})]
+
+def check_ceph(item, params, info):
+    jinfo = json.loads(' '.join(info[0]))
+    status = RetCode()
+    text = []
+    perfdata = []
+
+    mons = jinfo['health']['health']['health_services'][0]['mons']
+    health = jinfo['health']['overall_status']
+    text.append(health)
+
+    if health == 'HEALTH_WARN':
+        status.inc(RetCode.Warning)
+    elif health != 'HEALTH_OK':
+        status.inc(RetCode.Critical)
+
+    mon_ok = 0
+    mon_count = 0
+    for mon in mons:
+        mon_count += 1
+        if mon['health'] == 'HEALTH_OK':
+            mon_ok += 1
+    text.append("%s/%s monitors OK" % (mon_ok, mon_count))
+
+    for reason in jinfo['health']['summary']:
+        text.append(reason['summary'])
+
+    return (int(status), '; '.join(text), perfdata)
+
+check_info["ceph"] = {
+    "check_function"          : check_ceph,
+    "inventory_function"      : inventory_ceph,
+    "service_description"     : "Ceph status for %s",
+    "has_perfdata"            : True,
+}
